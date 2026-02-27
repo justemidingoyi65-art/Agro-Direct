@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const productRoutes = require('./routes/p');
-const userRoutes = require('./routes/userRoutes');
+//const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
 // Toutes les routes de produits commenceront par /api/products
 app.use('/api/products', productRoutes);
 // Toutes les routes utilisateurs commenceront par /api/users
-app.use('/api/users', userRoutes);
+//app.use('/api/users', userRoutes);
 
 // 4. LANCEMENT DU SERVEUR
 const PORT = process.env.PORT || 3000; // Utilise le port du serveur ou 3000 par défaut
@@ -31,4 +31,5 @@ app.listen(PORT, () => {
     console.log(`Serveur lancé sur le port ${PORT}`);
 
 });
+
 
