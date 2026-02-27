@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGRO-DIRECT BI | Gestion Intelligente</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #1b5e20;
+            --up: #2e7d32;
+            --down: #d32f2f;
+            --bg: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            color: #333;
+        }
+
+        /* Barre de navigation */
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            padding: 0 5%;
+            gap: 30px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-link {
+            cursor: pointer;
+            padding: 15px 5px;
+            font-weight: 600;
+            color: #888;
+            border-bottom: 3px solid transparent;
+            transition: 0.3s;
+        }
+
+        .tab-link.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Cartes et Tableaux */
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            color: #666;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* Recherche et Inputs */
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .btn-pdf {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Badges Marché */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .status-up {
+            background: #e8f5e9;
+            color: var(--up);
+        }
+
+        .status-down {
+            background: #ffebee;
+            color: var(--down);
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <h2><i class="fas fa-leaf"></i> AGRO-DIRECT BI</h2>
+        <div id="dateNow"></div>
+    </nav>
+
+    <div class="nav-tabs">
+        <div class="tab-link active" onclick="openTab(event, 'inventory')">Inventaire & Prix</div>
+        <div class="tab-link" onclick="openTab(event, 'add')">Nouvel Arrivage</div>
+        <div class="tab-link" onclick="openTab(event, 'market')">Analyse Valeur</div>
+    </div>
+
+    <div class="container">
+
+        <div id="inventory" class="section active">
+            <div class="search-container">
+                <input type="text" id="searchInput" onkeyup="filterTable()"
+                    placeholder="🔍 Taper pour rechercher un produit, une catégorie ou une qualité...">
+                <button onclick="exportToPDF()" class="btn-pdf"><i class="fas fa-file-pdf"></i> PDF</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Qualité</th>
+                            <th>Prix Détail</th>
+                            <th>Stock</th>
+                            <th>État Marché</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="add" class="section">
+            <div class="card" style="max-width: 600px; margin: auto;">
+                <h3>🛒 Enregistrer un nouveau lot</h3>
+                <form id="productForm">
+                    <label>Nom du produit</label>
+                    <input type="text" id="name" placeholder="Ex: Sac de Maïs 50kg" required>
+
+                    <label>Catégorie</label>
+                    <select id="category">
+                        <option value="Céréales">Céréales</option>
+                        <option value="Légumes">Légumes</option>
+                        <option value="Intrants">Intrants (Engrais/Semences)</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+
+                    <label>Qualité</label>
+                    <select id="quality">
+                        <option value="Premium">Premium (1er Choix)</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Économique">Économique</option>
+                    </select>
+
+                    <label>Prix de vente (FCFA)</label>
+                    <input type="number" id="price" placeholder="0" required>
+
+                    <label>Quantité disponible</label>
+                    <input type="number" id="stock" placeholder="0" required>
+
+                    <label>Tendance du Marché</label>
+                    <select id="marketStatus">
+                        <option value="Stable">Stable</option>
+                        <option value="En hausse">En hausse (📈)</option>
+                        <option value="En baisse">En baisse (📉)</option>
+                    </select>
+
+                    <button type="submit" class="btn-submit">AJOUTER À L'INVENTAIRE</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="market" class="section">
+            <div class="card" style="text-align:center; padding: 50px;">
+                <h3 style="color:#666;">Valeur financière de votre stock actuel</h3>
+                <h1 id="valeurTotale" style="color:var(--primary); font-size: 3.5rem; margin: 20px 0;">0 FCFA</h1>
+                <p id="statsInfo"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 1. GESTION DES ONGLETS
+        function openTab(evt, sectionName) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            document.getElementById(sectionName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+            loadProducts(); // Rafraîchir les données à chaque clic
+        }
+
+        // 2. CHARGEMENT DES DONNÉES
+        async function loadProducts() {
+            const response = await fetch('/api/products');
+            const products = await response.json();
+
+            const tbody = document.getElementById('productTable');
+            tbody.innerHTML = products.map(p => `
+            <tr>
+                <td><strong>${p.name}</strong><br><small style="color:#888">${p.category}</small></td>
+                <td>${p.quality}</td>
+                <td style="font-weight:bold">${Number(p.price).toLocaleString()} FCFA</td>
+                <td>${p.stock}</td>
+                <td><span class="badge ${p.marketStatus === 'En hausse' ? 'status-up' : 'status-down'}">${p.marketStatus}</span></td>
+                <td>
+                    <button onclick="deleteProduct('${p._id}')" style="color:var(--down); border:none; background:none; cursor:pointer;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+
+            // Mise à jour de la valeur totale (Correction du calcul)
+            const total = products.reduce((sum, p) => sum + (Number(p.price) * Number(p.stock)), 0);
+            document.getElementById('valeurTotale').innerText = total.toLocaleString() + " FCFA";
+            document.getElementById('statsInfo').innerText = `Analyse basée sur ${products.length} référence(s) en stock.`;
+        }
+
+        // 3. FONCTION DE RECHERCHE (Correction : maintenant ça marche !)
+        function filterTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const tbody = document.getElementById('productTable');
+            const rows = tbody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].innerText.toLowerCase();
+                // Si le texte de la ligne contient ce qu'on cherche
+                if (text.includes(filter)) {
+                    rows[i].style.display = ""; // On affiche
+                } else {
+                    rows[i].style.display = "none"; // On cache
+                }
+            }
+        }
+
+        // 4. AJOUT DE PRODUIT
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newProduct = {
+                name: document.getElementById('name').value,
+                category: document.getElementById('category').value,
+                quality: document.getElementById('quality').value,
+                price: document.getElementById('price').value,
+                stock: document.getElementById('stock').value,
+                marketStatus: document.getElementById('marketStatus').value
+            };
+
+            await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newProduct)
+            });
+
+            document.getElementById('productForm').reset();
+            alert("Produit ajouté avec succès !");
+            // Retour automatique à l'inventaire
+            openTab({ currentTarget: document.querySelector('.tab-link') }, 'inventory');
+        });
+
+        // 5. SUPPRESSION
+        async function deleteProduct(id) {
+            if (confirm("Voulez-vous vraiment retirer ce produit ?")) {
+                await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                loadProducts();
+            }
+        }
+
+        // 6. EXPORT PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(18);
+            doc.setTextColor(27, 94, 32);
+            doc.text("RAPPORT D'INVENTAIRE AGRO-DIRECT", 14, 20);
+
+            doc.autoTable({
+                html: 'table',
+                startY: 30,
+                headStyles: { fillColor: [27, 94, 32] },
+                columns: [
+                    { header: 'Produit', dataKey: 'name' },
+                    { header: 'Qualité', dataKey: 'quality' },
+                    { header: 'Prix', dataKey: 'price' },
+                    { header: 'Stock', dataKey: 'stock' },
+                    { header: 'Marché', dataKey: 'status' }
+                ]
+            });
+            doc.save("Inventaire_AgroDirect.pdf");
+        }
+
+        // Initialisation
+        loadProducts();
+        document.getElementById('dateNow').innerText = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+    </script>
+</body>
+
+</html>
