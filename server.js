@@ -26,10 +26,11 @@ app.use('/api/products', productRoutes);
 //app.use('/api/users', userRoutes);
 
 // 4. LANCEMENT DU SERVEUR
-const PORT = process.env.PORT || 3000; // Utilise le port du serveur ou 3000 par défaut
+const PORT = process.env.PORT || 10000; // Utilise le port du serveur ou 3000 par défaut
 app.listen(PORT, () => {
     console.log(`Serveur lancé sur le port ${PORT}`);
 
 });
+
 
 
