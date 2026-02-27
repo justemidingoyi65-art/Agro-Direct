@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const productRoutes = require('./routes/productRoutes');
+const productRoutes = require('./routes/p');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
@@ -31,3 +31,4 @@ app.listen(PORT, () => {
     console.log(`Serveur lancé sur le port ${PORT}`);
 
 });
+
