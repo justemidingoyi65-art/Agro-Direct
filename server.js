@@ -15,9 +15,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 2. CONNEXION À LA BASE DE DONNÉES (MongoDB)
 // Remplace l'URL si tu utilises MongoDB Atlas (le cloud)
-mongoose.connect('mongodb://localhost:27017/agro-direct')
-    .then(() => console.log("✅ Connexion à MongoDB réussie !"))
-    .catch((err) => console.error("❌ Erreur de connexion à MongoDB :", err));
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Connecté à MongoDB Atlas"))
+  .catch((err) => console.error("❌ Erreur :", err));
 
 // 3. DÉCLARATION DES ROUTES
 // Toutes les routes de produits commenceront par /api/products
@@ -29,4 +29,5 @@ app.use('/api/users', userRoutes);
 const PORT = process.env.PORT || 3000; // Utilise le port du serveur ou 3000 par défaut
 app.listen(PORT, () => {
     console.log(`Serveur lancé sur le port ${PORT}`);
+
 });
